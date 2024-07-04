@@ -33,4 +33,4 @@ def gen_data():
     
     db.session.commit()
 
-    return {'succes': "Fake data has been generated and entered!"}
+    return {'success': "Fake data has been generated and entered!"}
