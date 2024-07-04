@@ -3,8 +3,10 @@ from flask import request
 from app import app
 from app.database import db
 from app.models import User
-from app.schemas.userSchema import user_schema, user_schema_nopass, users_schema
-from app.util import hash_password, Duplicate, NotFound, ContentType, handler
+from app.schemas.userSchema import user_schema, user_schema_nopass, users_schema, user_schema_edit
+from app.utils.exc import Duplicate, NotFound, ContentType, handler
+from app.utils.password import hash_password
+from app.utils.auth import token_auth
 
 @app.get('/users')
 def get_all_users():
@@ -41,37 +43,36 @@ def post_user():
     return user_schema_nopass.jsonify(user)
 
     
-@app.put('/users/<int:user_id>')
+@app.put('/users')
+@token_auth.login_required
 @handler
-def put_user(user_id):
+def put_user():
     if not request.is_json:
         raise ContentType("application/json")
-    user = db.session.get(User, user_id)
-    if user is None:
-        raise NotFound(f"user with ID {user_id}")
-    user_data = user_schema.load(request.json, partial=True)
-    if 'username' in user_data:
-        username = user_data['username']
+    user = token_auth.current_user()
+    diff_data = user_schema_edit.load(request.json, partial=True)
+    if 'username' in diff_data:
+        username = diff_data['username']
         query = db.select(User).filter_by(username=username)
         if db.session.scalar(query):
             raise Duplicate(f"username {username}")
-    if 'email' in user_data:
-        email = user_data['email']
+    if 'email' in diff_data:
+        email = diff_data['email']
         query = db.select(User).filter_by(email=email)
         if db.session.scalar(query):
             raise Duplicate(f"email {email}")
-    hash_password(user_data)
-    for key, value in user_data.items():
+    hash_password(diff_data)
+    for key, value in diff_data.items():
         setattr(user, key, value)
     db.session.commit()
     return user_schema_nopass.jsonify(user)
 
-@app.delete('/users/<int:user_id>')
+@app.delete('/users')
+@token_auth.login_required
 @handler
-def delete_user(user_id):
-    user = db.session.get(User, user_id)
-    if user is None:
-        raise NotFound(f"user with ID {user_id}")
+def delete_user():
+    user = token_auth.current_user()
+    user_id = user.id
     db.session.delete(user)
     db.session.commit()
     return {'success': f"The user with ID {user_id} is no more!"}

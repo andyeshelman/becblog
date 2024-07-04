@@ -1,14 +1,7 @@
-from werkzeug.security import generate_password_hash
 from marshmallow import ValidationError
 from sqlalchemy.exc import DatabaseError
 
 from functools import wraps
-
-def hash_password(obj):
-    if isinstance(obj, dict) and 'password' in obj:
-        obj['password'] = generate_password_hash(obj['password'])
-    elif hasattr(obj, 'password'):
-        obj.password = generate_password_hash(obj.password)
 
 class Duplicate(Exception):
     def __init__(self, thing):
@@ -25,7 +18,19 @@ class NotFound(Exception):
 class ContentType(Exception):
     def __init__(self, thing):
         self.message = {
-            'error': f"Request body must be {thing}"
+            'error': f"Request body must be {thing}..."
+        }
+
+class BadLogin(Exception):
+    def __init__(self):
+        self.message = {
+            'error': "This username and/or password is invalid..."
+        }
+
+class Forbidden(Exception):
+    def __init__(self, thing):
+        self.message = {
+            'error': f"You lack the authority to {thing}..."
         }
 
 def handler(func):
@@ -39,6 +44,10 @@ def handler(func):
             return err.messages, 400
         except Duplicate as err:
             return err.message, 400
+        except BadLogin as err:
+            return err.message, 401
+        except Forbidden as err:
+            return err.message, 403
         except NotFound as err:
             return err.message, 404
         except DatabaseError as err:

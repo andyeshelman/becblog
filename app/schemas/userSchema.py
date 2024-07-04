@@ -10,4 +10,6 @@ class UserSchema(ma.Schema):
 
 user_schema = UserSchema()
 user_schema_nopass = UserSchema(exclude=['password'])
+user_schema_login = UserSchema(only=['username', 'password'])
+user_schema_edit = UserSchema(exclude=['id'])
 users_schema = UserSchema(many=True, exclude=['password'])
