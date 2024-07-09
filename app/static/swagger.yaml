@@ -1,0 +1,610 @@
+openapi: 3.0.3
+
+info:
+  title: Blog API
+  description: A blog API
+  version: 1.1.0
+
+servers:
+- url: http://localhost:5000
+
+paths:
+
+  /login:
+    post:
+      tags:
+      - login
+      summary: Submit username and password to recieve token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#components/schemas/Login'
+              - required:
+                - username
+                - password
+
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjAzODI0NzQsImlhdCI6MTcyMDM3ODg3NCwiY3VzdG9tZXJfaWQiOjJ9.GpTc2yICTTfWH5m3FiSYJOc7tDUrvsRy-tJYfWyCtiw
+        400:
+          $ref: '#components/responses/BadRequest'
+        401:
+          $ref: '#components/responses/LoginError'
+      security: []
+
+  /users:
+    get:
+      tags:
+      - users
+      summary: Returns a list of all users
+      responses:
+        200:
+          $ref: '#components/responses/UserArray'
+        401:
+          $ref: '#components/responses/TokenError'
+    post:
+      tags:
+        - users
+      summary: Add a new user
+      security: []
+      requestBody:
+        $ref: '#components/requests/UserNew'
+      responses:
+        200:
+          allOf:
+          - description: User successfully created
+          - $ref: '#components/responses/EchoUser'
+        400:
+          $ref: '#components/responses/BadRequest'
+        409:
+          $ref: '#components/responses/DuplicationError'
+    put:
+      tags:
+      - users
+      summary: Edit user by token
+      requestBody:
+        $ref: '#components/requests/UserEdit'
+      responses:
+        200:
+          allOf:
+          - description: User successfully updated
+          - $ref: '#components/responses/EchoUser'
+        400:
+          $ref: '#components/responses/BadRequest'
+        401:
+          $ref: '#components/responses/TokenError'
+        409:
+          $ref: '#components/responses/DuplicationError'
+    delete:
+      tags:
+      - users
+      summary: Delete user by token
+      responses:
+        200:
+          description: User successfully deleted
+        401:
+          $ref: '#components/responses/TokenError'
+  /users/{user_id}:
+    get:
+      tags:
+      - users
+      summary: Returns a single user by id
+      parameters:
+      - $ref: '#components/parameters/userId'
+      responses:
+        200:
+          $ref: '#components/responses/EchoUser'
+        404:
+          $ref: '#components/responses/NotFound'
+  /users/{user_id}/posts:
+    get:
+      tags:
+      - users
+      - posts
+      summary: Returns all posts made by a single user
+      parameters:
+      - $ref: '#components/parameters/userId'
+      responses:
+        200:
+          $ref: '#components/responses/PostArray'
+        404:
+          $ref: '#components/responses/NotFound'
+  /users/{user_id}/comments:
+    get:
+      tags:
+      - users
+      - comments
+      summary: Returns all comments made by a single user
+      parameters:
+      - $ref: '#components/parameters/userId'
+      responses:
+        200:
+          $ref: '#components/responses/CommentArray'
+        404:
+          $ref: '#components/responses/NotFound'
+
+  /posts:
+    get:
+      tags:
+      - posts
+      summary: Returns a paginated list of all posts
+      parameters:
+      - $ref: '#components/parameters/pageParam'
+      - $ref: '#components/parameters/perPageParam'
+      responses:
+        200:
+          $ref: '#components/responses/PostArray'
+        401:
+          $ref: '#components/responses/TokenError'
+    post:
+      tags:
+      - posts
+      summary: Create a new post (poster by token)
+      requestBody:
+        $ref: '#components/requests/PostNew'
+      responses:
+        200:
+          $ref: '#components/responses/EchoPost'
+        401:
+          $ref: '#components/responses/TokenError'
+  /posts/{post_id}:
+    get:
+      tags:
+      - posts
+      summary: Get a single post by id
+      parameters:
+      - $ref: '#components/parameters/postId'
+      responses:
+        200:
+          $ref: '#components/responses/EchoPost'
+        401:
+          $ref: '#components/responses/TokenError'
+        404:
+          $ref: '#components/responses/NotFound'
+    put:
+      tags:
+      - posts
+      summary: Modify a post by id (must be original poster)
+      parameters:
+      - $ref: '#components/parameters/postId'
+      requestBody:
+        $ref: '#components/requests/PostEdit'
+      responses:
+        200:
+          $ref: '#components/responses/EchoPost'
+        401:
+          $ref: '#components/responses/TokenError'
+        403:
+          $ref: '#components/responses/PermissionError'
+        404:
+          $ref: '#components/responses/NotFound'
+    delete:
+      tags:
+      - posts
+      summary: Delete a post by id (must be original poster)
+      parameters:
+      - $ref: '#components/parameters/postId'
+      responses:
+        200:
+          description: Post successfully deleted
+        401:
+          $ref: '#components/responses/TokenError'
+        403:
+          $ref: '#components/responses/PermissionError'
+        404:
+          $ref: '#components/responses/NotFound'
+  /posts/{post_id}/comments:
+    get:
+      tags:
+      - posts
+      - comments
+      summary: Get all comments on a specified post
+      parameters:
+      - $ref: '#components/parameters/postId'
+      responses:
+        200:
+          $ref: '#components/responses/CommentArray'
+        401:
+          $ref: '#components/responses/TokenError'
+        404:
+          $ref: '#components/responses/NotFound'
+    post:
+      tags:
+      - posts
+      - comments
+      summary: Post a comment on a specified post (commenter by token)
+      parameters:
+      - $ref: '#components/parameters/postId'
+      requestBody:
+        $ref: '#components/requests/CommentNew'
+      responses:
+        200:
+          $ref: '#components/responses/EchoComment'
+        401:
+          $ref: '#components/responses/TokenError'
+        404:
+          $ref: '#components/responses/NotFound'
+
+  /comments:
+    get:
+      tags:
+      - comments
+      summary: Get paginated list of all comments
+      parameters:
+      - $ref: '#components/parameters/pageParam'
+      - $ref: '#components/parameters/perPageParam'
+      responses:
+        200:
+          $ref: '#components/responses/CommentArray'
+        401:
+          $ref: '#components/responses/TokenError'
+  /comments/{comment_id}:
+    get:
+      tags:
+      - comments
+      summary: Get a single comment by id
+      parameters:
+      - $ref: '#components/parameters/commentId'
+      responses:
+        200:
+          $ref: '#components/responses/EchoComment'
+        401:
+          $ref: '#components/responses/TokenError'
+        404:
+          $ref: '#components/responses/NotFound'
+    put:
+      tags:
+      - comments
+      summary: Modify a comment by id (must be original commenter)
+      parameters:
+      - $ref: '#components/parameters/commentId'
+      requestBody:
+        $ref: '#components/requests/CommentEdit'
+      responses:
+        200:
+          $ref: '#components/responses/EchoComment'
+        401:
+          $ref: '#components/responses/TokenError'
+        403:
+          $ref: '#components/responses/PermissionError'
+        404:
+          $ref: '#components/responses/NotFound'
+
+  /admin:
+    get:
+      tags:
+      - admin
+      summary: Get all users with the admin role
+      responses:
+        200:
+          $ref: '#components/responses/UserArray'
+        401:
+          $ref: '#components/responses/TokenError'
+  /admin/users/{user_id}:
+    delete:
+      tags:
+      - admin
+      summary: Delete user by id (requires admin role)
+      parameters:
+      - $ref: '#components/parameters/userId'
+      responses:
+        200:
+          description: User successfully deleted
+        404:
+          $ref: '#components/responses/NotFound'
+  /admin/posts/{post_id}:
+    delete:
+      tags:
+      - admin
+      summary: Delete post by id (requires admin role)
+      parameters:
+      - $ref: '#components/parameters/postId'
+      responses:
+        200:
+          description: Post successfully deleted
+        404:
+          $ref: '#components/responses/NotFound'
+  /admin/comments/{comment_id}:
+    delete:
+      tags:
+      - admin
+      summary: Delete comment by id (requires admin role)
+      parameters:
+      - $ref: '#components/parameters/commentId'
+      responses:
+        200:
+          description: Comment successfully deleted
+        404:
+          $ref: '#components/responses/NotFound'
+
+  /fake-data/admin:
+    patch:
+      tags:
+      - fake-data
+      security: []
+      summary: Adds admin to the Role table (if necessary) and generates a user with admin role
+      responses:
+        200:
+          $ref: '#components/responses/EchoUser'
+        409:
+          $ref: '#components/responses/DuplicationError'
+  /fake-data/users:
+    patch:
+      tags:
+      - fake-data
+      security: []
+      summary: Generates fake users (passwords equal usernames)
+      parameters:
+      - $ref: '#components/parameters/fakeNb'
+      responses:
+        200:
+          description: Users successfully generated
+        409:
+          $ref: '#components/responses/DuplicationError'
+  /fake-data/posts:
+    patch:
+      tags:
+      - fake-data
+      security: []
+      summary: Generates fake posts
+      parameters:
+      - $ref: '#components/parameters/fakeNb'
+      responses:
+        200:
+          description: Posts successfully generated
+  /fake-data/comments:
+    patch:
+      tags:
+      - fake-data
+      security: []
+      summary: Generates fake comments
+      parameters:
+      - $ref: '#components/parameters/fakeNb'
+      responses:
+        200:
+          description: Comments successfully generated
+
+
+components:
+
+  parameters:
+    pageParam:
+      in: query
+      name: page
+      schema:
+        type: integer
+        default: 1
+      description: The page of items to return
+    perPageParam:
+      in: query
+      name: per_page
+      schema:
+        type: integer
+        default: 20
+      description: The number of items to return per page
+    userId:
+      in: path
+      name: user_id
+      schema:
+        type: integer
+        example: 3
+    postId:
+      in: path
+      name: post_id
+      schema:
+        type: integer
+        example: 672
+    commentId:
+      in: path
+      name: comment_id
+      schema:
+        type: integer
+        example: 12345
+    fakeNb:
+      in: query
+      name: nb
+      schema:
+        type: integer
+        default: 1
+      description: Number of fake entries to generate
+
+  requests:
+    UserNew:
+      required: true
+      content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#components/schemas/User'
+              - required:
+                - name
+                - email
+                - username
+                - password
+    UserEdit:
+      content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/User'
+    PostNew:
+      required: true
+      content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#components/schemas/Post'
+              - required:
+                - title
+                - body
+    PostEdit:
+      content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Post'
+    CommentNew:
+      required: true
+      content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#components/schemas/Comment'
+              - required:
+                - body
+    CommentEdit:
+      content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Comment'
+  
+  responses:
+    EchoUser:
+      content:
+        application/json:
+          schema:
+            $ref: '#components/schemas/User'
+    UserArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#components/schemas/User'
+    EchoPost:
+      content:
+        application/json:
+          schema:
+            $ref: '#components/schemas/Post'
+    PostArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#components/schemas/Post'
+    EchoComment:
+      content:
+        application/json:
+          schema:
+            $ref: '#components/schemas/Comment'
+    CommentArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#components/schemas/Comment'
+    BaseError:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: A description of the error
+    BadRequest:
+      description: Request body is of an unsupported type, or has missing or unrecognized fields
+    DuplicationError:
+      allOf:
+      - description: Unique columns must be unique
+      - $ref: '#components/responses/BaseError'
+    LoginError:
+      allOf:
+      - description: Username and/or password is incorrect
+      - $ref: '#components/responses/BaseError'
+    TokenError:
+      allOf:
+      - description: Authorization token is missing or invalid
+      - $ref: '#components/responses/BaseError'
+    PermissionError:
+      allOf:
+      - description: You don't have permission to perform this action
+      - $ref: '#components/responses/BaseError'
+    NotFound:
+      allOf:
+      - description: Requested resource cannot be found
+      - $ref: '#components/responses/BaseError'
+
+
+  schemas:
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+          example: ssquarepants104
+        password:
+          type: string
+          example: OmManiPadmeHum
+          format: password
+          writeOnly: true
+    User:
+      allOf:
+      - $ref: '#components/schemas/Login'
+      - type: object
+        properties:
+          id:
+            type: integer
+            example: 3
+            readOnly: true
+          name:
+            type: string
+            example: SpongeBob SquarePants
+          email:
+            type: string
+            example: spongebob@bikinibottom.org
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 672
+          readOnly: true
+        user_id:
+          type: integer
+          example: 3
+          readOnly: true
+        title:
+          type: string
+          example: The Krusty Krab Pizza
+        body:
+          type: string
+          example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed cursus dui eros, ac ultrices massa pulvinar vitae. Cras sit amet urna sagittis, porttitor nunc et, fermentum enim. Praesent sagittis vel odio eget tincidunt. Quisque augue diam, eleifend id purus nec, pellentesque mattis dui. Aliquam erat volutpat. Morbi pulvinar eu justo quis maximus. Suspendisse blandit aliquet quam sit amet condimentum.
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12345
+          readOnly: true
+        user_id:
+          type: integer
+          example: 3
+          readOnly: true
+        post_id:
+          type: integer
+          example: 672
+          readOnly: true
+        body:
+          type: string
+          example: Lorem ipsum dolor sit amet, consectetur adipiscing elit?
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

@@ -1,18 +1,40 @@
-from faker import Faker
+from flask import request
 
 from random import choice, randint
 
 from app import app
-from app.database import db
-from app.models import User, Post
+from app.modules import db, fake
+from app.models import User, Post, Comment, Role
+from app.schemas.userSchema import user_schema_nopass, users_schema
+from app.schemas.postSchema import posts_schema
+from app.schemas.commentSchema import comments_schema
 from app.utils.password import hash_password
+from app.utils.exc import handler
 
-fake = Faker('en-US')
+@app.patch('/fake-data/admin')
+@handler
+def fake_admin():
+    query = db.select(Role).filter_by(name='admin')
+    admin = db.session.scalar(query)
+    if admin is None:
+        admin = Role(name='admin')
+        db.session.add(admin)
+    user = User()
+    user.name = fake.name()
+    user.email = fake.email()
+    user.username = "admin" + str(randint(1,999))
+    user.password = hash_password(user.username)
+    user.roles.append(admin)
+    db.session.add(user)
+    db.session.commit()
+    return user_schema_nopass.jsonify(user)
 
-@app.patch('/fake-data')
-def gen_data():
-    user_ids = []
-    for _ in range(10):
+@app.patch('/fake-data/users')
+@handler
+def fake_users():
+    nb = request.args.get('nb', 1, type=int)
+
+    for _ in range(nb):
         user = User()
         user.name = fake.name()
         user.username = (user.name[0] + user.name.split()[-1]).lower() + str(randint(1,999))
@@ -20,17 +42,43 @@ def gen_data():
         user.email = user.username + "@example.com"
         hash_password(user)
         db.session.add(user)
-        db.session.flush()
-        db.session.refresh(user)
-        user_ids.append(user.id)
+
+    db.session.commit()
+
+    return {'success': "Fake users have been generated!"}
     
-    for _ in range(100):
+@app.patch('/fake-data/posts')
+def fake_posts():
+    nb = request.args.get('nb', 1, type=int)
+    q = db.select(User)
+    users = db.session.scalars(q).all()
+
+    for _ in range(nb):
         post = Post()
-        post.user_id = choice(user_ids)
+        post.user_id = choice(users)
         post.title = "RE: " + fake.color_name()
         post.body = "\n".join(fake.paragraphs(nb=5))
         db.session.add(post)
     
     db.session.commit()
 
-    return {'success': "Fake data has been generated and entered!"}
+    return {'success': "Fake posts have been generated!"}
+
+@app.patch('/fake-data/comments')
+def fake_comments():
+    nb = request.args.get('nb', 1, type=int)
+    q = db.select(User)
+    users = db.session.scalars(q).all()
+    q = db.select(Post)
+    posts = db.session.scalars(q).all()
+
+    for _ in range(nb):
+        comment = Comment()
+        comment.user = choice(users)
+        comment.post = choice(posts)
+        comment.body = fake.paragraph()
+        db.session.add(comment)
+    
+    db.session.commit()
+
+    return {'success': "Fake comments have been generated!"}

@@ -1,7 +1,7 @@
 from flask import request
 
 from app import app
-from app.database import db
+from app.modules import db, limiter
 from app.models import User
 from app.schemas.userSchema import user_schema_login
 from app.utils.exc import handler, ContentType, BadLogin
@@ -10,6 +10,7 @@ from app.utils.token import encode_token
 
 
 @app.post('/login')
+@limiter.limit('100 per day')
 @handler
 def post_login():
     if not request.is_json:

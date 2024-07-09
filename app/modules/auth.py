@@ -2,7 +2,7 @@ from flask_httpauth import HTTPTokenAuth
 
 from app.utils.token import decode_token
 from app.models import User
-from app.database import db
+from app.modules import db
 
 token_auth = HTTPTokenAuth()
 
@@ -16,4 +16,11 @@ def verify(token):
 
 @token_auth.error_handler
 def handle_error(status):
-    return {'error': "Invalid token..."}, status
+    if status == 403:
+        return {'error': "You lack permission to perform this action..."}, 403
+    else:
+        return {'error': "Invalid token..."}, status
+
+@token_auth.get_user_roles
+def get_user_roles(user):
+    return [role.name for role in user.roles]

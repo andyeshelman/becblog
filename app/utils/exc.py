@@ -27,10 +27,10 @@ class BadLogin(Exception):
             'error': "This username and/or password is invalid..."
         }
 
-class Forbidden(Exception):
+class Permission(Exception):
     def __init__(self, thing):
         self.message = {
-            'error': f"You lack the authority to {thing}..."
+            'error': f"You do not have permission to {thing}..."
         }
 
 def handler(func):
@@ -42,14 +42,14 @@ def handler(func):
             return err.message, 400
         except ValidationError as err:
             return err.messages, 400
-        except Duplicate as err:
-            return err.message, 400
         except BadLogin as err:
             return err.message, 401
-        except Forbidden as err:
+        except Permission as err:
             return err.message, 403
         except NotFound as err:
             return err.message, 404
+        except Duplicate as err:
+            return err.message, 409
         except DatabaseError as err:
             return {'error': err.orig.msg}, 500
     return handled
