@@ -23,7 +23,7 @@ def get_all_comments():
 def get_one_comment(comment_id):
     comment = db.session.get(Comment, comment_id)
     if comment is None:
-        raise NotFound(f"comment wth ID {comment_id}")
+        raise NotFound(f"comment with ID {comment_id}")
     return comment_schema.jsonify(comment)
 
 @app.put('/comments/<int:comment_id>')

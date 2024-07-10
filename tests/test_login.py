@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 from app import app
 from app.modules import fake
@@ -13,7 +13,7 @@ class TestLoginEndpoint(unittest.TestCase):
     @patch('app.routes.login.db.session.scalar')
     @patch('app.routes.login.check_password')
     def test_successful_authenticate(self, mock_check_hash, mock_scalar, mock_encode_token):
-        mock_customer = MagicMock()
+        mock_customer = Mock()
         mock_customer.id = 123
 
         mock_scalar.return_value = mock_customer
