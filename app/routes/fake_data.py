@@ -55,7 +55,7 @@ def fake_posts():
 
     for _ in range(nb):
         post = Post()
-        post.user_id = choice(users)
+        post.user = choice(users)
         post.title = "RE: " + fake.color_name()
         post.body = "\n".join(fake.paragraphs(nb=5))
         db.session.add(post)
