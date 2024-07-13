@@ -60,12 +60,10 @@ paths:
       summary: Add a new user
       security: []
       requestBody:
-        $ref: '#components/requests/UserNew'
+        $ref: '#components/requestBodies/UserNew'
       responses:
         200:
-          allOf:
-          - description: User successfully created
-          - $ref: '#components/responses/EchoUser'
+          $ref: '#components/responses/EchoUser'
         400:
           $ref: '#components/responses/BadRequest'
         409:
@@ -75,12 +73,10 @@ paths:
       - users
       summary: Edit user by token
       requestBody:
-        $ref: '#components/requests/UserEdit'
+        $ref: '#components/requestBodies/UserEdit'
       responses:
         200:
-          allOf:
-          - description: User successfully updated
-          - $ref: '#components/responses/EchoUser'
+          $ref: '#components/responses/EchoUser'
         400:
           $ref: '#components/responses/BadRequest'
         401:
@@ -153,7 +149,7 @@ paths:
       - posts
       summary: Create a new post (poster by token)
       requestBody:
-        $ref: '#components/requests/PostNew'
+        $ref: '#components/requestBodies/PostNew'
       responses:
         200:
           $ref: '#components/responses/EchoPost'
@@ -180,7 +176,7 @@ paths:
       parameters:
       - $ref: '#components/parameters/postId'
       requestBody:
-        $ref: '#components/requests/PostEdit'
+        $ref: '#components/requestBodies/PostEdit'
       responses:
         200:
           $ref: '#components/responses/EchoPost'
@@ -228,7 +224,7 @@ paths:
       parameters:
       - $ref: '#components/parameters/postId'
       requestBody:
-        $ref: '#components/requests/CommentNew'
+        $ref: '#components/requestBodies/CommentNew'
       responses:
         200:
           $ref: '#components/responses/EchoComment'
@@ -271,7 +267,7 @@ paths:
       parameters:
       - $ref: '#components/parameters/commentId'
       requestBody:
-        $ref: '#components/requests/CommentEdit'
+        $ref: '#components/requestBodies/CommentEdit'
       responses:
         200:
           $ref: '#components/responses/EchoComment'
@@ -423,7 +419,7 @@ components:
         default: 1
       description: Number of fake entries to generate
 
-  requests:
+  requestBodies:
     UserNew:
       required: true
       content:
@@ -473,11 +469,13 @@ components:
   
   responses:
     EchoUser:
+      description: A User object
       content:
         application/json:
           schema:
             $ref: '#components/schemas/User'
     UserArray:
+      description: An array of User objects
       content:
         application/json:
           schema:
@@ -485,11 +483,13 @@ components:
             items:
               $ref: '#components/schemas/User'
     EchoPost:
+      description: A Post object
       content:
         application/json:
           schema:
             $ref: '#components/schemas/Post'
     PostArray:
+      description: An array of Post objects
       content:
         application/json:
           schema:
@@ -497,11 +497,13 @@ components:
             items:
               $ref: '#components/schemas/Post'
     EchoComment:
+      description: A Comment object
       content:
         application/json:
           schema:
             $ref: '#components/schemas/Comment'
     CommentArray:
+      description: An array of Comment objects
       content:
         application/json:
           schema:
@@ -509,6 +511,7 @@ components:
             items:
               $ref: '#components/schemas/Comment'
     BaseError:
+      description: A basic error
       content:
         application/json:
           schema:
