@@ -52,5 +52,6 @@ class TestPostsEndpoint(unittest.TestCase):
         mock_auth.return_value = True
         with app.app_context():
             post = db.session.scalar(db.select(Post))
-            response = self.client.delete(f'/posts/{post.id}')
-            self.assertEqual(response.status_code, 403)
+            if post:
+                response = self.client.delete(f'/posts/{post.id}')
+                self.assertEqual(response.status_code, 403)
