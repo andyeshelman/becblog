@@ -7,6 +7,7 @@ info:
 
 servers:
 - url: http://localhost:5000
+- url: https://becblog.onrender.com
 
 paths:
 
@@ -396,18 +397,21 @@ components:
     userId:
       in: path
       name: user_id
+      required: true
       schema:
         type: integer
         example: 3
     postId:
       in: path
       name: post_id
+      required: true
       schema:
         type: integer
         example: 672
     commentId:
       in: path
       name: comment_id
+      required: true
       schema:
         type: integer
         example: 12345
@@ -516,25 +520,15 @@ components:
     BadRequest:
       description: Request body is of an unsupported type, or has missing or unrecognized fields
     DuplicationError:
-      allOf:
-      - description: Unique columns must be unique
-      - $ref: '#components/responses/BaseError'
+      description: Unique columns must be unique
     LoginError:
-      allOf:
-      - description: Username and/or password is incorrect
-      - $ref: '#components/responses/BaseError'
+      description: Username and/or password is incorrect
     TokenError:
-      allOf:
-      - description: Authorization token is missing or invalid
-      - $ref: '#components/responses/BaseError'
+      description: Authorization token is missing or invalid
     PermissionError:
-      allOf:
-      - description: You don't have permission to perform this action
-      - $ref: '#components/responses/BaseError'
+      description: You don't have permission to perform this action
     NotFound:
-      allOf:
-      - description: Requested resource cannot be found
-      - $ref: '#components/responses/BaseError'
+      description: Requested resource cannot be found
 
 
   schemas:
