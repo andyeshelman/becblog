@@ -3,7 +3,7 @@ from flask import request
 from random import choice, randint
 
 from app import app
-from app.modules import db, fake
+from app.modules import db, fake, limiter
 from app.models import User, Post, Comment, Role
 from app.schemas.userSchema import user_schema_nopass, users_schema
 from app.schemas.postSchema import posts_schema
@@ -12,6 +12,7 @@ from app.utils.password import hash_password
 from app.utils.exc import handler
 
 @app.patch('/fake-data/admin')
+@limiter.limit('5 per day')
 @handler
 def fake_admin():
     query = db.select(Role).filter_by(name='admin')
@@ -30,9 +31,11 @@ def fake_admin():
     return user_schema_nopass.jsonify(user)
 
 @app.patch('/fake-data/users')
+@limiter.limit('5 per day')
 @handler
 def fake_users():
     nb = request.args.get('nb', 1, type=int)
+    nb = min(nb, 20)
 
     for _ in range(nb):
         user = User()
@@ -48,8 +51,10 @@ def fake_users():
     return {'success': "Fake users have been generated!"}
     
 @app.patch('/fake-data/posts')
+@limiter.limit('5 per day')
 def fake_posts():
     nb = request.args.get('nb', 1, type=int)
+    nb = min(nb, 20)
     q = db.select(User)
     users = db.session.scalars(q).all()
 
@@ -65,8 +70,10 @@ def fake_posts():
     return {'success': "Fake posts have been generated!"}
 
 @app.patch('/fake-data/comments')
+@limiter.limit('5 per day')
 def fake_comments():
     nb = request.args.get('nb', 1, type=int)
+    nb = min(nb, 20)
     q = db.select(User)
     users = db.session.scalars(q).all()
     q = db.select(Post)
