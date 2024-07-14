@@ -418,7 +418,7 @@ components:
         type: integer
         default: 1
         maximum: 20
-      description: Number of fake entries to generate
+      description: Number of fake entries to generate (max 20)
 
   requestBodies:
     UserNew:
